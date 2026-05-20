@@ -1,0 +1,41 @@
+# Dados brutos (regeneráveis via 01_dados_setup.R + baixar_referencias_datasus.R)
+*.dbc
+*.csv
+*.xlsx
+
+# Caches do pipeline (regeneráveis)
+*.rds
+.RData
+.RDataTmp*
+
+# Outputs (regeneráveis via rmarkdown::render)
+*.docx
+*.pdf
+*.html
+
+# Caches/temporários do knitr e R
+*_cache/
+*_files/
+.Rhistory
+.Rproj.user/
+.DS_Store
+
+# Caches específicos identificados no projeto
+analise_moran_dbc_cache/
+analise_moran_dbc_files/
+exploracao_regressao_cache/
+dbc_mening/
+
+# Imagens geradas (regeneráveis)
+*.png
+diagrama_moran.png
+grafico_*.png
+mapa_*.png
+
+# Pareceres editoriais (privados; não versionar)
+Parecer_*.docx
+Revisao_*.docx
+Resumos_*.docx
+ESCRITA*.docx
+INSTRUÇÕES*.pdf
+pt.pdf
