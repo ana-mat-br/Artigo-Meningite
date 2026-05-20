@@ -9,7 +9,7 @@ Códigos R do estudo **"Concentração da incidência de meningite em centros de
 ## Autores
 
 - Pedro Henrique Rodrigues Braga
-- **Ana Paula Fernandes** *(autora correspondente — anapaula.fernandes@uftm.edu.br)*
+- Ana Paula Fernandes
 - Aline Dias Paiva
 
 Universidade Federal do Triângulo Mineiro (UFTM), Uberaba (MG), Brasil.
