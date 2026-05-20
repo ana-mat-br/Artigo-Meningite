@@ -17,6 +17,7 @@ Todos os scripts ficam em `R/`, numerados conforme a ordem de execução.
 ```
 R/
   README.md                          Documentação interna da pasta R/
+  00_baixar_dbc_sinan.R              Baixa MENIBR15.dbc..MENIBR25.dbc do FTP do DATASUS
   01_dados_setup.R                   Pé do pipeline: lê DBCs + SIDRA → dados_base.rds
   02_baixar_referencias.R            Pop. BR/MG/SE por (ano × sexo × faixa) → populacao_br_mg.rds
   03_smr.R                           SMR padronizado por idade × sexo (indireta)
@@ -34,6 +35,7 @@ A partir do diretório raiz do projeto:
 
 ```r
 # 1. Preparação dos dados (uma única vez)
+source("R/00_baixar_dbc_sinan.R")   # baixa os MENIBR*.dbc do DATASUS
 source("R/01_dados_setup.R")
 source("R/02_baixar_referencias.R")
 
@@ -55,27 +57,17 @@ source("R/exportar_figuras.R")
 
 ### Dados
 
-Os scripts esperam encontrar os arquivos DBC do SINAN-MENING no diretório raiz:
-
-```
-MENIBR15.dbc, MENIBR16.dbc, …, MENIBR25.dbc
-```
-
-Esses arquivos são públicos e podem ser baixados do FTP do DATASUS:
+Os arquivos DBC do SINAN-MENING (`MENIBR15.dbc` a `MENIBR25.dbc`) são baixados
+automaticamente pelo script `R/00_baixar_dbc_sinan.R` a partir do FTP oficial do
+DATASUS:
 
 ```
 ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/FINAIS/
 ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/PRELIM/    (ano corrente)
 ```
 
-Em R, exemplo de download:
-
-```r
-ano <- 2024
-url <- paste0("ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/FINAIS/",
-              "MENIBR", substr(ano, 3, 4), ".dbc")
-download.file(url, paste0("MENIBR", substr(ano, 3, 4), ".dbc"), mode = "wb")
-```
+Esses arquivos são públicos e de domínio público. Não são versionados neste
+repositório (são grandes, regeneráveis e melhor mantidos na fonte oficial).
 
 ### Pacotes R
 
