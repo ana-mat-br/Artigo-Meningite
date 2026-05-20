@@ -1,125 +1,172 @@
 # Artigo-Meningite
 
-Códigos R do artigo *"Concentração da incidência de meningite em centros de referência hospitalar no Triângulo Mineiro, Brasil, 2015–2025: análise espacial bayesiana, LISA e regressão de Poisson modificada"*, submetido à *Revista Brasileira de Epidemiologia*.
+Códigos R do estudo **"Concentração da incidência de meningite em centros de referência hospitalar no Triângulo Mineiro, Brasil, 2015–2025: análise espacial bayesiana, LISA e regressão de Poisson modificada"**, submetido à *Revista Brasileira de Epidemiologia*.
+
+> **Achado central**: o aparente excesso regional de incidência de meningite (SMR vs Brasil = 1,80; SMR vs MG = 2,81) é predominantemente explicado pela concentração de notificações em dois centros de referência hospitalar (Uberaba e Uberlândia, que reúnem ~76% dos casos). Excluindo esses dois municípios, o SMR vs Brasil cai para 0,84 e o gradiente etário (RR = 2,46 para ≥50 anos) permanece como o principal preditor de óbito, robusto à fase pandêmica.
+
+---
 
 ## Autores
 
 - Pedro Henrique Rodrigues Braga
-- Ana Paula Fernandes (autora correspondente: anapaula.fernandes@uftm.edu.br)
+- **Ana Paula Fernandes** *(autora correspondente — anapaula.fernandes@uftm.edu.br)*
 - Aline Dias Paiva
 
 Universidade Federal do Triângulo Mineiro (UFTM), Uberaba (MG), Brasil.
 
-## Estrutura
+---
 
-Todos os scripts ficam em `R/`, numerados conforme a ordem de execução.
+## Estrutura do repositório
 
 ```
-R/
-  README.md                          Documentação interna da pasta R/
-  00_baixar_dbc_sinan.R              Baixa MENIBR15.dbc..MENIBR25.dbc do FTP do DATASUS
-  01_dados_setup.R                   Pé do pipeline: lê DBCs + SIDRA → dados_base.rds
-  02_baixar_referencias.R            Pop. BR/MG/SE por (ano × sexo × faixa) → populacao_br_mg.rds
-  03_smr.R                           SMR padronizado por idade × sexo (indireta)
-  04_espacial_lisa.R                 Moran Global + LISA com FDR + mapas
-  05_perfil_sazonalidade.R           Perfil epidemiológico + sazonalidade + letalidade
-  06_regressao_poisson.R             Poisson modificada (HC3): óbito + encerramento prolongado
-  07_supl_tendencia.R                Suplementar: Joinpoint, Prais-Winsten, GAM + SMR sem UDI/UBE
-  08_supl_regressao.R                Suplementar: GEE, GAM com spline, mice (imputação múltipla)
-  exportar_figuras.R                 Gera Figuras 1 e 2 em 300 dpi (PNG + TIFF + PDF)
+Artigo-Meningite/
+├── .gitignore                  Filtra dados, cache, .docx e .Rmd
+├── README.md                   Este arquivo
+└── R/
+    ├── README.md                       Documentação interna
+    ├── 00_baixar_dbc_sinan.R           Baixa MENIBR*.dbc do DATASUS
+    ├── 01_dados_setup.R                Lê DBCs + SIDRA, monta dados_base.rds
+    ├── 02_baixar_referencias.R         Pop. BR/MG/SE por idade × sexo (SIDRA)
+    ├── 03_smr.R                        SMR padronizado por idade × sexo
+    ├── 04_espacial_lisa.R              Moran Global + LISA com correção FDR
+    ├── 05_perfil_sazonalidade.R        Perfil + sazonalidade + letalidade
+    ├── 06_regressao_poisson.R          Poisson HC3 (óbito + encerramento)
+    ├── 07_supl_tendencia.R             Joinpoint, Prais-Winsten, GAM, SMR sem UDI/UBE
+    ├── 08_supl_regressao.R             GEE, GAM com spline, imputação múltipla (mice)
+    └── exportar_figuras.R              Figuras 1 e 2 em 300 dpi (PNG + TIFF + PDF)
 ```
 
-## Como reproduzir
+Apenas código R é versionado. Dados brutos (`*.dbc`), caches (`*.rds`) e outputs (`*.docx`, `*.png`) são gerados localmente pelos scripts.
 
-A partir do diretório raiz do projeto:
+---
+
+## Pipeline de execução
+
+A partir da raiz do projeto, no R:
 
 ```r
-# 1. Preparação dos dados (uma única vez)
-source("R/00_baixar_dbc_sinan.R")   # baixa os MENIBR*.dbc do DATASUS
-source("R/01_dados_setup.R")
-source("R/02_baixar_referencias.R")
+# Etapa 1 — Aquisição e preparação dos dados (executar uma vez)
+source("R/00_baixar_dbc_sinan.R")     # ~30 MB do FTP do DATASUS
+source("R/01_dados_setup.R")          # gera dados_base.rds
+source("R/02_baixar_referencias.R")   # gera populacao_br_mg.rds
 
-# 2. Análises do manuscrito principal
-source("R/03_smr.R")
-source("R/04_espacial_lisa.R")
-source("R/05_perfil_sazonalidade.R")
-source("R/06_regressao_poisson.R")
+# Etapa 2 — Análises do manuscrito principal
+source("R/03_smr.R")                  # Tabela 1 (SMR cumulativo)
+source("R/04_espacial_lisa.R")        # Moran + LISA + mapas
+source("R/05_perfil_sazonalidade.R")  # Tabelas de perfil
+source("R/06_regressao_poisson.R")    # Tabela 2 (RR óbito + encerramento)
 
-# 3. Análises de sensibilidade (material suplementar)
+# Etapa 3 — Análises de sensibilidade (material suplementar)
 source("R/07_supl_tendencia.R")
 source("R/08_supl_regressao.R")
 
-# 4. Figuras finais em 300 dpi
-source("R/exportar_figuras.R")
+# Etapa 4 — Figuras finais para submissão
+source("R/exportar_figuras.R")        # figs/Figura1_*.{png,tiff,pdf}
 ```
+
+---
 
 ## Pré-requisitos
 
 ### Dados
 
-Os arquivos DBC do SINAN-MENING (`MENIBR15.dbc` a `MENIBR25.dbc`) são baixados
-automaticamente pelo script `R/00_baixar_dbc_sinan.R` a partir do FTP oficial do
-DATASUS:
+Os arquivos `MENIBR15.dbc` a `MENIBR25.dbc` são baixados automaticamente do FTP do DATASUS:
 
 ```
-ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/FINAIS/
-ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/PRELIM/    (ano corrente)
+ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/FINAIS/    # anos consolidados
+ftp://ftp.datasus.gov.br/dissemin/publicos/SINAN/DADOS/PRELIM/    # ano corrente
 ```
-
-Esses arquivos são públicos e de domínio público. Não são versionados neste
-repositório (são grandes, regeneráveis e melhor mantidos na fonte oficial).
 
 ### Pacotes R
 
 ```r
 install.packages(c(
-  "read.dbc", "dplyr", "tidyr", "stringr", "readr", "sidrar",
-  "geobr", "sf", "spdep", "ggplot2", "ggrepel", "ggspatial",
-  "cowplot", "knitr", "kableExtra", "tibble", "sandwich", "lmtest",
-  "car", "segmented", "prais", "mgcv", "mice", "geepack", "ragg"
+  # I/O e manipulação
+  "read.dbc", "dplyr", "tidyr", "stringr", "readr", "tibble",
+  # Estatística e inferência
+  "spdep", "sandwich", "lmtest", "car", "segmented", "prais",
+  "mgcv", "mice", "geepack",
+  # Geoespacial
+  "sf", "geobr", "sidrar",
+  # Visualização
+  "ggplot2", "ggrepel", "ggspatial", "cowplot", "ragg",
+  # Tabelas
+  "knitr", "kableExtra"
 ))
 ```
 
+R ≥ 4.2 recomendado.
+
+---
+
 ## Fontes de dados
 
-- **SINAN-MENING** (Sistema de Informação de Agravos de Notificação — Meningite): DATASUS.
-- **Estimativas populacionais municipais anuais**: SIDRA/IBGE, tabela 6579.
-- **Distribuição etária por sexo**: SIDRA/IBGE, tabela 9514 (Censo Demográfico 2022).
-- **Malha territorial**: `geobr::read_municipality(code_muni = "MG", year = 2022)`.
+| Fonte | Conteúdo | Período |
+|---|---|---|
+| **SINAN/DATASUS** (MENIBR*.dbc) | Notificações de meningite (Brasil completo, residentes do TM são filtrados) | 2015–2025 |
+| **SIDRA/IBGE** tabela 6579 | Estimativas populacionais municipais | 2015–2024 (2025 propagada) |
+| **SIDRA/IBGE** tabela 9514 | População por idade simples × sexo (Censo Demográfico 2022) | 2022 |
+| **geobr** | Malha territorial dos municípios de MG | 2022 |
 
-Os dados são públicos e re-obteníveis pelos scripts. Não versionados aqui (são grandes e regeneráveis).
+---
 
-## Período e área
+## Desenho do estudo
 
 - **Período**: 2015–2025 (11 anos)
-- **Área**: macrorregiões de saúde Triângulo Norte e Triângulo Sul, Minas Gerais (54 municípios)
+- **Área**: macrorregiões de saúde Triângulo Norte e Triângulo Sul, MG (54 municípios)
+- **Unidade de análise**: município de residência (`ID_MN_RESI`)
+- **Critério de caso**: `CLASSI_FIN == 1` (confirmado)
+- **Desfechos**: óbito por meningite (`EVOLUCAO == 2`); encerramento prolongado (≥ 30 dias entre `DT_SIN_PRI` e `DT_ENCERRA`)
 
-## Critério de seleção dos casos
+---
 
-Casos confirmados (`CLASSI_FIN == 1`) cuja residência (`ID_MN_RESI`) pertence ao Triângulo Mineiro. A unidade analítica é o residente, não o local de notificação.
+## Métodos
 
-## Métodos principais
-
-| Método | Onde |
+| Método | Implementação |
 |---|---|
-| Estimador Bayesiano Empírico Global (suavização de taxas) | `R/04_espacial_lisa.R` |
-| Padronização indireta do SMR por idade × sexo (Censo 2022) | `R/03_smr.R` |
+| Estimador Bayesiano Empírico Global (suavização) | `R/04_espacial_lisa.R` |
+| Padronização indireta de SMR (idade × sexo, Censo 2022) | `R/03_smr.R` |
 | Índice de Moran Global (taxa EB) | `R/04_espacial_lisa.R` |
 | LISA com correção FDR (Benjamini-Hochberg) | `R/04_espacial_lisa.R` |
-| Regressão de Poisson modificada com variância robusta HC3 | `R/06_regressao_poisson.R` |
-| Joinpoint / Prais-Winsten / GAM (tendência) | `R/07_supl_tendencia.R` |
+| Regressão de Poisson modificada com HC3 (sandwich) | `R/06_regressao_poisson.R` |
+| Joinpoint segmentado + Prais-Winsten + GAM | `R/07_supl_tendencia.R` |
+| SMR de sensibilidade excluindo Uberaba e Uberlândia | `R/07_supl_tendencia.R` |
 | GEE com cluster por município | `R/08_supl_regressao.R` |
+| GAM Poisson com spline para idade | `R/08_supl_regressao.R` |
 | Imputação múltipla (mice) para raça/cor | `R/08_supl_regressao.R` |
+
+---
+
+## Outputs gerados
+
+Após executar o pipeline completo, os seguintes arquivos são criados no diretório raiz (não versionados):
+
+```
+dados_base.rds                       Tabelas mestre do estudo
+populacao_br_mg.rds                  Populações de referência
+pop_idade_muni_censo2022.rds         Cache do Censo 2022 (idade × sexo × município)
+mapa_inset_brasil_mg.rds             Cache dos shapefiles BR e MG
+casos_por_faixa.rds                  Casos agregados por (ano × sexo × faixa)
+figs/Figura1_incidencia.{png,tiff,pdf}    Mapa de incidência (300 dpi)
+figs/Figura2_LISA.{png,tiff,pdf}          Mapa LISA (300 dpi)
+```
+
+---
+
+## Como citar
+
+> Braga PHR, Fernandes AP, Paiva AD. Concentração da incidência de meningite em centros de referência hospitalar no Triângulo Mineiro, Brasil, 2015–2025: análise espacial bayesiana, LISA e regressão de Poisson modificada. *Rev Bras Epidemiol*. [no prelo].
+
+Código-fonte: <https://github.com/ana-mat-br/Artigo-Meningite>
+
+---
 
 ## Licença
 
-MIT (apenas para o código). Os dados do SINAN/DATASUS são de domínio público e seguem as políticas do Ministério da Saúde.
+Código liberado sob a **licença MIT**. Os dados do SINAN/DATASUS e do IBGE são públicos e seguem as políticas dos respectivos órgãos governamentais.
+
+---
 
 ## Declaração de uso de inteligência artificial
 
-A ferramenta Claude (Anthropic, modelo Opus 4.7) foi utilizada como apoio à
-organização e refatoração do código R, à implementação técnica dos procedimentos
-estatísticos e à revisão da redação em português. A concepção do estudo, o
-delineamento analítico, a interpretação dos resultados e as decisões editoriais
-foram de responsabilidade exclusiva dos autores, que revisaram integralmente o
-conteúdo produzido. Em conformidade com COPE (2023) e ICMJE (2023).
+A ferramenta **Claude** (Anthropic, modelo Opus 4.7) foi utilizada como apoio à organização e refatoração do código R, à implementação técnica dos procedimentos estatísticos e à revisão da redação. A concepção do estudo, o delineamento analítico, a interpretação dos resultados e as decisões editoriais foram de responsabilidade exclusiva dos autores, em conformidade com as orientações do **COPE** (2023) e do **ICMJE** (2023).
