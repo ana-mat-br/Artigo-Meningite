@@ -153,9 +153,9 @@ figs/Figura2_LISA.{png,tiff,pdf}          Mapa LISA (300 dpi)
 
 ## Como citar
 
-> Braga PHR, Fernandes AP, Paiva AD. Concentração da incidência de meningite em centros de referência hospitalar no Triângulo Mineiro, Brasil, 2015–2025: análise espacial bayesiana, LISA e regressão de Poisson modificada. *Rev Bras Epidemiol*. [no prelo].
+> Braga PHR, Fernandes AP, Paiva AD. Concentração da incidência de meningite em centros de referência hospitalar no Triângulo Mineiro, Brasil, 2015–2025: análise espacial bayesiana, LISA e regressão de Poisson modificada. Manuscrito submetido à *Revista Brasileira de Epidemiologia* em maio de 2026. Código-fonte: <https://github.com/ana-mat-br/Artigo-Meningite>
 
-Código-fonte: <https://github.com/ana-mat-br/Artigo-Meningite>
+*Esta citação será atualizada para a referência completa quando o artigo for aceito e publicado.*
 
 ---
 
