@@ -39,3 +39,6 @@ Resumos_*.docx
 ESCRITA*.docx
 INSTRUÇÕES*.pdf
 pt.pdf
+
+# Arquivos .Rmd ficam apenas locais (não versionados); somente .R no repo
+*.Rmd
