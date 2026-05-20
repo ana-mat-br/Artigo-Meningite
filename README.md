@@ -36,8 +36,6 @@ Artigo-Meningite/
     └── exportar_figuras.R              Figuras 1 e 2 em 300 dpi (PNG + TIFF + PDF)
 ```
 
-Apenas código R é versionado. Dados brutos (`*.dbc`), caches (`*.rds`) e outputs (`*.docx`, `*.png`) são gerados localmente pelos scripts.
-
 ---
 
 ## Pipeline de execução
