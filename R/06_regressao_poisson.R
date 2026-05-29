@@ -138,7 +138,7 @@ base_ef <- perfil |>
       levels = c("Pré (2015-2019)", "Intra (2020-2021)", "Pós (2022-2025)"))
   ) |>
   filter(!is.na(sexo_r), !is.na(faixa_r),
-         raca %in% c("Branca","Parda","Preta"),
+         !is.na(raca),         # raça/cor não ignorada
          !is.na(longo))
 
 n_base   <- nrow(base_ef)
@@ -146,15 +146,20 @@ obitos   <- sum(base_ef$obito)
 longos   <- sum(base_ef$longo)
 
 # ── Fluxo de exclusões ────────────────────────────────────────────────────────
-# n_confirmados vem do dados_base: já é o número de casos confirmados residentes no TM
+# Categorização raça/cor: colapso "Branca" vs "Não branca" (Preta + Parda +
+# Amarela + Indígena), recuperando 131 casos da categoria "Outras" (Amarela +
+# Indígena) anteriormente excluídos por baixa representatividade. Casos com
+# raça/cor ignorada permanecem excluídos do modelo principal e são tratados
+# por imputação múltipla no suplementar (script 08).
 n_confirmados <- nrow(db$sinan_tri)
 n_perfil       <- nrow(perfil)
-n_raca_valida  <- perfil |> filter(raca %in% c("Branca","Parda","Preta")) |> nrow()
+n_raca_valida  <- perfil |> filter(!is.na(raca)) |> nrow()
 n_excl_desf    <- n_confirmados - n_perfil
-n_excl_raca    <- n_perfil - n_raca_valida
+n_excl_raca    <- n_perfil - n_raca_valida      # apenas raça/cor ignorada
 n_excl_datas   <- n_raca_valida - n_base
 n_raca_ignorada    <- sum(is.na(perfil$raca))
 n_raca_outras      <- sum(perfil$raca == "Outras", na.rm = TRUE)
+n_raca_recuperados <- n_raca_outras             # Amarela + Indígena recuperados
 
 # ── Etiologia — completude geral e por ano ────────────────────────────────────
 n_eti_valida  <- sum(!is.na(perfil$etiologia))
