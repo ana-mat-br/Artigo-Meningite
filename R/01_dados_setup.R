@@ -21,6 +21,18 @@ suppressPackageStartupMessages({
   library(tibble)
 })
 
+suppressPackageStartupMessages({
+  library(read.dbc)
+  library(dplyr)
+  library(tidyr)
+  library(stringr)
+  library(sidrar)
+  library(geobr)
+  library(sf)
+  library(spdep)
+  library(tibble)
+})
+
 # --- 1. Configuração temporal -------------------------------------------------
 ano_inicio  <- 2015L
 ano_fim     <- 2025L
@@ -184,6 +196,43 @@ if (!deve_rebaixar) {
   saveRDS(pop_muni_idade, cache_pop_muni)
 }
 
+# --- 6b. Censo 2010 — estrutura etária por sexo (TM agregado) ---------------
+# Usado APENAS na análise de sensibilidade do SMR (§ 1.2 de 02_smr.Rmd),
+# interpolando ano-a-ano a estrutura etária entre 2010 e 2022.
+cache_pop_2010 <- "pop_tm_faixa_sexo_censo2010.rds"
+if (!file.exists(cache_pop_2010)) {
+  message("Consultando SIDRA 200 (Censo 2010 por sexo × idade — TM)…")
+  grupos5 <- c("0 a 4 anos","5 a 9 anos","10 a 14 anos","15 a 19 anos",
+               "20 a 24 anos","25 a 29 anos","30 a 34 anos","35 a 39 anos",
+               "40 a 44 anos","45 a 49 anos","50 a 54 anos","55 a 59 anos",
+               "60 a 64 anos","65 a 69 anos","70 a 74 anos","75 a 79 anos",
+               "80 a 84 anos","85 a 89 anos","90 a 94 anos","95 a 99 anos",
+               "100 anos ou mais")
+  batches <- split(codigos_ibge_7d, ceiling(seq_along(codigos_ibge_7d) / 10))
+  raw_2010 <- bind_rows(lapply(batches, function(b) {
+    Sys.sleep(0.5)
+    sidrar::get_sidra(x = 200, period = "2010", geo = "City",
+                      geo.filter = list(City = as.character(b)),
+                      variable = 93, header = FALSE)
+  }))
+  pop_tm_2010 <- raw_2010 |>
+    filter(D4N %in% c("Homens","Mulheres"), D6N %in% grupos5) |>
+    mutate(sexo = ifelse(D4N == "Homens", "M", "F"),
+           faixa = case_when(
+             D6N == "0 a 4 anos" ~ "<5",
+             D6N %in% c("5 a 9 anos","10 a 14 anos","15 a 19 anos") ~ "5-19",
+             D6N %in% c("20 a 24 anos","25 a 29 anos","30 a 34 anos",
+                        "35 a 39 anos","40 a 44 anos","45 a 49 anos") ~ "20-49",
+             TRUE ~ "50+"),
+           pop = as.numeric(V)) |>
+    group_by(sexo, faixa) |>
+    summarise(pop_2010 = sum(pop, na.rm = TRUE), .groups = "drop")
+  saveRDS(pop_tm_2010, cache_pop_2010)
+} else {
+  message("Censo 2010: usando cache (", cache_pop_2010, ")")
+  pop_tm_2010 <- readRDS(cache_pop_2010)
+}
+
 # --- 7. População do TM por (ano × sexo × faixa) -----------------------------
 prop_tm <- pop_muni_idade |>
   group_by(sexo, faixa) |>
@@ -273,6 +322,7 @@ dados_base <- list(
   pop_muni_idade    = pop_muni_idade,
   pop_tm_faixa      = pop_tm_faixa,
   pop_tm_faixa_sexo = pop_tm_faixa_sexo,
+  pop_tm_2010       = pop_tm_2010,
   dados          = dados,
   mapa           = mapa,
   pesos          = pesos

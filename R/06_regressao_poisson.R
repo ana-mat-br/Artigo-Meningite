@@ -7,7 +7,6 @@
 #
 # Projeto: Análise da meningite no Triângulo Mineiro (2015–2025)
 # =============================================================================
-
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
@@ -356,6 +355,68 @@ rodar_poisson(obito ~ sexo_r + faixa_r + raca2 + fase_pand, base_ef) |>
     "Categorias de referência: Sexo = Feminino; Faixa etária = 20–49 anos; ",
     "Raça/cor = Branca; Fase pandêmica = Pré (2015-2019)."
   ), align = c("l","c","c"))
+
+
+## ----modelo1-sens-etio, include=FALSE-----------------------------------------
+# Sensibilidade para o RR de óbito em ≥50 anos: restringir a casos com
+# etiologia identificada e ajustar por grupo etiológico (Viral/Bacteriana/Outras).
+# Responde à crítica de que o efeito da idade pode ser confundido por
+# composição etiológica (idosos têm mais meningite bacteriana, mais letal).
+base_etio_sens <- base_ef |>
+  filter(!is.na(etiologia), etiologia != "Não determinada") |>
+  mutate(eti_grp = factor(case_when(
+    etiologia %in% c("Meningocócica","H. influenzae","Pneumocócica","Outras bacterianas") ~ "Bacteriana",
+    etiologia == "Viral" ~ "Viral",
+    TRUE ~ "Outras"),
+    levels = c("Viral","Bacteriana","Outras")))
+
+n_etio_sens   <- nrow(base_etio_sens)
+obitos_etio_sens <- sum(base_etio_sens$obito)
+
+mod1_etio <- glm(obito ~ sexo_r + faixa_r + raca2 + fase_pand + eti_grp,
+                 family = poisson(link = "log"), data = base_etio_sens)
+vcov1_etio <- vcovHC(mod1_etio, type = "HC3")
+coef1_etio <- coeftest(mod1_etio, vcov = vcov1_etio)
+
+rr_50_etio    <- formatC(exp(coef1_etio["faixa_r50+ anos",1]),
+                         format="f", digits=2, decimal.mark=",")
+ic_li_50_etio <- formatC(exp(coef1_etio["faixa_r50+ anos",1]
+                             - 1.96*coef1_etio["faixa_r50+ anos",2]),
+                         format="f", digits=2, decimal.mark=",")
+ic_ls_50_etio <- formatC(exp(coef1_etio["faixa_r50+ anos",1]
+                             + 1.96*coef1_etio["faixa_r50+ anos",2]),
+                         format="f", digits=2, decimal.mark=",")
+p_50_etio     <- fmt_p(coef1_etio["faixa_r50+ anos",4])
+
+rr_bact       <- formatC(exp(coef1_etio["eti_grpBacteriana",1]),
+                         format="f", digits=2, decimal.mark=",")
+ic_li_bact    <- formatC(exp(coef1_etio["eti_grpBacteriana",1]
+                             - 1.96*coef1_etio["eti_grpBacteriana",2]),
+                         format="f", digits=2, decimal.mark=",")
+ic_ls_bact    <- formatC(exp(coef1_etio["eti_grpBacteriana",1]
+                             + 1.96*coef1_etio["eti_grpBacteriana",2]),
+                         format="f", digits=2, decimal.mark=",")
+p_bact        <- fmt_p(coef1_etio["eti_grpBacteriana",4])
+
+delta_rr_pct  <- round(100 * (exp(coef1_etio["faixa_r50+ anos",1]) /
+                              exp(coef1["faixa_r50+ anos",1]) - 1), 1)
+
+
+## ----tabela-modelo1-sens-etio-------------------------------------------------
+data.frame(
+  Modelo         = c("Principal (etiologias agrupadas)",
+                     "Sensibilidade (com etiologia + ajuste por grupo)"),
+  `n`            = c(n_base, n_etio_sens),
+  `Óbitos`       = c(obitos, obitos_etio_sens),
+  `RR ≥50 anos`  = c(paste0(rr_50, " (", ic_li_50, "–", ic_ls_50, ")"),
+                     paste0(rr_50_etio, " (", ic_li_50_etio, "–", ic_ls_50_etio, ")")),
+  `Valor de p`   = c(p_50, p_50_etio),
+  check.names    = FALSE
+) |> kable(caption = paste0(
+  "Tabela 2b. Razão de risco para óbito em indivíduos ≥50 anos: modelo principal vs ",
+  "análise de sensibilidade restrita aos casos com etiologia identificada e ",
+  "ajustada por grupo etiológico (viral/bacteriana/outras)."
+), align = c("l","c","c","c","c"), row.names = FALSE)
 
 
 ## ----tabela-enc---------------------------------------------------------------
