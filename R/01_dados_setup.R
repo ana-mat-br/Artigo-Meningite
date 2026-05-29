@@ -21,18 +21,6 @@ suppressPackageStartupMessages({
   library(tibble)
 })
 
-suppressPackageStartupMessages({
-  library(read.dbc)
-  library(dplyr)
-  library(tidyr)
-  library(stringr)
-  library(sidrar)
-  library(geobr)
-  library(sf)
-  library(spdep)
-  library(tibble)
-})
-
 # --- 1. Configuração temporal -------------------------------------------------
 ano_inicio  <- 2015L
 ano_fim     <- 2025L
